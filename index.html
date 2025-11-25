@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Diploma Helper - AI Powered</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -24,19 +26,24 @@
               }
             },
             animation: {
-              'fade-in': 'fadeIn 0.3s ease-out',
-              'bounce-in': 'bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+              'fade-in': 'fadeIn 0.6s ease-out forwards',
+              'zoom-portal': 'zoomPortal 1.2s cubic-bezier(0.7, 0, 0.3, 1) forwards',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 6s ease-in-out infinite',
             },
             keyframes: {
               fadeIn: {
-                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
               },
-              bounceIn: {
-                '0%': { transform: 'scale(0.3)', opacity: '0' },
-                '50%': { transform: 'scale(1.05)' },
-                '70%': { transform: 'scale(0.9)' },
-                '100%': { transform: 'scale(1)', opacity: '1' },
+              zoomPortal: {
+                '0%': { transform: 'scale(1) rotate(0deg)', opacity: '1' },
+                '40%': { transform: 'scale(1.5) rotate(-5deg)', opacity: '1' },
+                '100%': { transform: 'scale(40) rotate(0deg)', opacity: '0' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
               }
             }
           }
@@ -44,21 +51,27 @@
       }
     </script>
     
-    <!-- React & Dependencies -->
+    <!-- React & Dependencies (UMD for stability) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/lucide-react@latest/dist/lucide-react.min.js"></script>
 
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+      
+      body {
+        font-family: 'Hind Siliguri', sans-serif;
+      }
+      
       /* Custom Scrollbar */
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: #f1f5f9; }
       ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
       ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-      .hide-scrollbar::-webkit-scrollbar { display: none; }
-      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 <script type="importmap">
 {
@@ -72,64 +85,118 @@
 }
 </script>
 </head>
-<body class="bg-primary-50 text-slate-800 antialiased selection:bg-primary-200 selection:text-primary-900">
-    <div id="root">
-        <div class="min-h-screen flex flex-col items-center justify-center text-primary-600">
-            <div class="animate-pulse flex flex-col items-center gap-4">
-                <div class="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                <h2 class="text-xl font-bold">অ্যাপ লোড হচ্ছে... (App Loading...)</h2>
-            </div>
-        </div>
-    </div>
+<body class="bg-slate-50 text-slate-800 antialiased overflow-hidden selection:bg-primary-200 selection:text-primary-900">
+    <div id="root"></div>
 
     <script type="text/babel" data-type="module">
         import { GoogleGenAI } from "https://esm.run/@google/genai";
 
-        // --- ICONS ---
+        // --- ICONS MAPPING ---
         const { 
             Menu, X, User, Settings, Moon, LogOut, 
             ArrowLeft, Plus, Trash2, Palette, Highlighter, Save,
             Bell, Clock, Play, Pause, RotateCcw,
             BookOpen, ChevronRight, FileText, AlertCircle,
             Calendar: CalendarIcon, ChevronLeft, Table, 
-            MessageCircle, Send, Sparkles, Bot
+            MessageCircle, Send, Sparkles, Bot, GraduationCap, 
+            Edit3, CheckCircle, Smartphone
         } = window.lucideReact;
 
         // --- GLOBAL STATE ---
-        // Shim for process.env
+        // Shim process.env for the AI library
         window.process = { env: { API_KEY: localStorage.getItem('GEMINI_API_KEY') || '' } };
 
         // --- COMPONENTS ---
 
-        // 1. Routine Maker (রুটিন মেকার)
+        // 1. INTRO SCREEN (ইন্ট্রো স্ক্রিন)
+        const IntroScreen = ({ onEnter }) => {
+            const [isExiting, setIsExiting] = React.useState(false);
+
+            const handleEnter = () => {
+                setIsExiting(true);
+                // Wait for the zoom animation to mostly finish before unmounting
+                setTimeout(onEnter, 1000); 
+            };
+
+            return (
+                <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-primary-900 to-slate-900 text-white overflow-hidden transition-opacity duration-1000 ${isExiting ? 'pointer-events-none' : ''}`}>
+                    
+                    {/* Background Elements */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/20 rounded-full blur-[100px] animate-float"></div>
+                        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] animate-float" style={{animationDelay: '1s'}}></div>
+                    </div>
+
+                    <div 
+                        onClick={handleEnter}
+                        className={`cursor-pointer relative z-10 flex flex-col items-center justify-center ${isExiting ? 'animate-zoom-portal' : ''}`}
+                    >
+                        {/* Logo Circle */}
+                        <div className="group relative w-48 h-48 mb-8 transition-transform duration-500 hover:scale-105">
+                            {/* Rings */}
+                            <div className="absolute inset-0 rounded-full border-4 border-primary-400/30 animate-[spin_10s_linear_infinite]"></div>
+                            <div className="absolute inset-2 rounded-full border-2 border-white/20 animate-[spin_15s_linear_infinite_reverse]"></div>
+                            
+                            {/* Core */}
+                            <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-white to-primary-100 shadow-[0_0_50px_rgba(14,165,233,0.5)] flex items-center justify-center overflow-hidden">
+                                <GraduationCap size={80} className="text-primary-700 drop-shadow-lg" />
+                                
+                                {/* Shine Effect */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700"></div>
+                            </div>
+                        </div>
+                        
+                        {/* Text */}
+                        <div className="text-center space-y-3">
+                            <h1 className="text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-primary-200 drop-shadow-sm">
+                                Diploma Helper
+                            </h1>
+                            <div className="flex items-center justify-center gap-2 text-primary-200 text-sm font-medium tracking-[0.2em] uppercase opacity-80 animate-pulse-slow">
+                                <span>Tap to Enter</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={`absolute bottom-8 text-center transition-opacity duration-500 ${isExiting ? 'opacity-0' : 'opacity-60'}`}>
+                        <p className="text-xs font-light tracking-wide mb-1">Developed by</p>
+                        <p className="text-lg font-bold text-white tracking-wider">Rifat, DPI</p>
+                    </div>
+                </div>
+            );
+        };
+
+        // 2. ROUTINE MAKER
         const RoutineMaker = ({ onBack }) => {
-            const [rows, setRows] = React.useState([
-                {
+            const [rows, setRows] = React.useState(() => {
+                const saved = localStorage.getItem('routine_data');
+                return saved ? JSON.parse(saved) : [{
                     id: '1',
                     time: '09:00 AM',
                     days: {
-                        sat: { text: 'Math', color: 'bg-white', isHighlighted: false },
-                        sun: { text: 'Physics', color: 'bg-white', isHighlighted: false },
-                        mon: { text: 'Chemistry', color: 'bg-white', isHighlighted: false },
-                        tue: { text: 'English', color: 'bg-white', isHighlighted: false },
-                        wed: { text: 'Bangla', color: 'bg-white', isHighlighted: false },
-                        thu: { text: 'Drawing', color: 'bg-white', isHighlighted: false },
+                        sat: { text: '', color: 'bg-white', isHighlighted: false },
+                        sun: { text: '', color: 'bg-white', isHighlighted: false },
+                        mon: { text: '', color: 'bg-white', isHighlighted: false },
+                        tue: { text: '', color: 'bg-white', isHighlighted: false },
+                        wed: { text: '', color: 'bg-white', isHighlighted: false },
+                        thu: { text: '', color: 'bg-white', isHighlighted: false },
                     }
-                }
-            ]);
+                }];
+            });
             const [selectedColor, setSelectedColor] = React.useState('bg-yellow-100');
             const [isHighlightMode, setIsHighlightMode] = React.useState(false);
             const days = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu'];
             const dayLabels = { sat: 'শনি', sun: 'রবি', mon: 'সোম', tue: 'মঙ্গল', wed: 'বুধ', thu: 'বৃহস্পতি' };
 
+            const saveRoutine = () => {
+                localStorage.setItem('routine_data', JSON.stringify(rows));
+                alert('রুটিন সেভ করা হয়েছে!');
+            };
+
             const addRow = () => {
                 const newRow = {
                     id: Date.now().toString(),
                     time: '00:00',
-                    days: days.reduce((acc, day) => ({
-                        ...acc,
-                        [day]: { text: '', color: 'bg-white', isHighlighted: false }
-                    }), {})
+                    days: days.reduce((acc, day) => ({ ...acc, [day]: { text: '', color: 'bg-white', isHighlighted: false } }), {})
                 };
                 setRows([...rows, newRow]);
             };
@@ -139,16 +206,11 @@
             const updateCell = (rowId, day, field, value) => {
                 setRows(rows.map(row => {
                     if (row.id !== rowId) return row;
-                    return {
-                        ...row,
-                        days: { ...row.days, [day]: { ...row.days[day], [field]: value } }
-                    };
+                    return { ...row, days: { ...row.days, [day]: { ...row.days[day], [field]: value } } };
                 }));
             };
 
-            const updateTime = (rowId, time) => {
-                setRows(rows.map(r => r.id === rowId ? { ...r, time } : r));
-            };
+            const updateTime = (rowId, time) => setRows(rows.map(r => r.id === rowId ? { ...r, time } : r));
 
             const handleCellClick = (rowId, day) => {
                 if (isHighlightMode) {
@@ -162,35 +224,33 @@
             const colors = ['bg-white', 'bg-red-100', 'bg-orange-100', 'bg-yellow-100', 'bg-green-100', 'bg-teal-100', 'bg-blue-100', 'bg-purple-100'];
 
             return (
-                <div className="space-y-6 animate-fade-in">
-                    <div className="flex items-center justify-between">
-                        <button onClick={onBack} className="flex items-center gap-2 text-primary-600 hover:underline font-medium">
-                            <ArrowLeft size={20} /> হোম পেজে ফিরে যান
-                        </button>
-                        <button className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg shadow hover:bg-primary-700 transition-colors">
-                            <Save size={18} /> সেভ করুন
-                        </button>
+                <div className="space-y-6 animate-fade-in pb-20">
+                    <div className="flex items-center justify-between sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-4 border-b border-slate-200/50">
+                        <button onClick={onBack} className="flex items-center gap-2 text-primary-600 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors font-semibold"><ArrowLeft size={20} /> ফিরে যান</button>
+                        <button onClick={saveRoutine} className="flex items-center gap-2 bg-primary-600 text-white px-5 py-2 rounded-xl shadow-lg shadow-primary-200 hover:bg-primary-700 transition-all active:scale-95"><Save size={18} /> সেভ করুন</button>
                     </div>
 
-                    <div className="bg-white p-4 rounded-xl shadow-md border border-slate-200 overflow-hidden">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        {/* Tools */}
                         <div className="flex flex-wrap gap-4 mb-6 items-center border-b border-slate-100 pb-4">
                             <div className="flex items-center gap-2">
-                                <Palette size={18} className="text-slate-500"/>
+                                <Palette size={18} className="text-slate-400"/>
                                 <div className="flex gap-1">
                                     {colors.map(c => (
                                         <button key={c} onClick={() => { setSelectedColor(c); setIsHighlightMode(false); }}
-                                            className={`w-6 h-6 rounded-full border border-slate-300 ${c} ${selectedColor === c && !isHighlightMode ? 'ring-2 ring-primary-500' : ''}`}
+                                            className={`w-6 h-6 rounded-full border border-slate-300 transition-transform hover:scale-110 ${c} ${selectedColor === c && !isHighlightMode ? 'ring-2 ring-primary-500 ring-offset-2' : ''}`}
                                         />
                                     ))}
                                 </div>
                             </div>
-                            <div className="h-6 w-px bg-slate-300 mx-2 hidden sm:block"></div>
+                            <div className="h-6 w-px bg-slate-200 mx-2 hidden sm:block"></div>
                             <button onClick={() => setIsHighlightMode(!isHighlightMode)}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isHighlightMode ? 'bg-yellow-400 text-yellow-900' : 'bg-slate-100 text-slate-600'}`}>
-                                <Highlighter size={16} /> {isHighlightMode ? 'হাইলাইট চালু' : 'হাইলাইট'}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isHighlightMode ? 'bg-yellow-100 text-yellow-700 ring-1 ring-yellow-400' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                                <Highlighter size={16} /> {isHighlightMode ? 'হাইলাইট চালু' : 'হাইলাইট মোড'}
                             </button>
                         </div>
 
+                        {/* Table */}
                         <div className="overflow-x-auto pb-4">
                             <table className="w-full min-w-[800px] border-collapse">
                                 <thead>
@@ -202,58 +262,50 @@
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {rows.map((row) => (
-                                        <tr key={row.id} className="group hover:bg-slate-50">
-                                            <td className="p-2">
-                                                <input type="text" value={row.time} onChange={(e) => updateTime(row.id, e.target.value)}
-                                                    className="w-24 p-2 rounded border border-slate-200 text-sm font-medium" />
-                                            </td>
+                                        <tr key={row.id} className="group hover:bg-slate-50/50">
+                                            <td className="p-2"><input type="text" value={row.time} onChange={(e) => updateTime(row.id, e.target.value)} className="w-24 p-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-700 text-center focus:ring-2 focus:ring-primary-400 outline-none" placeholder="00:00"/></td>
                                             {days.map(day => (
                                                 <td key={day} className="p-2">
                                                     <div className="relative">
                                                         <input type="text" value={row.days[day].text} onChange={(e) => updateCell(row.id, day, 'text', e.target.value)}
-                                                            className={`w-full p-2 rounded border border-slate-200 outline-none text-sm transition-colors ${row.days[day].color} ${row.days[day].isHighlighted ? 'font-bold text-primary-700 underline decoration-wavy' : 'text-slate-700'}`} placeholder="..." />
-                                                        <button onClick={() => handleCellClick(row.id, day)} className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-black/10 text-slate-500">
-                                                            <div className={`w-2 h-2 rounded-full bg-current`}></div>
-                                                        </button>
+                                                            className={`w-full p-2 rounded-lg border border-slate-200 focus:border-primary-400 focus:ring-1 focus:ring-primary-400 outline-none text-sm transition-colors ${row.days[day].color} ${row.days[day].isHighlighted ? 'font-bold text-primary-700 underline decoration-wavy decoration-primary-300' : 'text-slate-700'}`} placeholder="-" />
+                                                        <button onClick={() => handleCellClick(row.id, day)} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-black/5 text-slate-400 transition-opacity"><div className={`w-2 h-2 rounded-full ${selectedColor === 'bg-white' ? 'bg-slate-300' : selectedColor}`}></div></button>
                                                     </div>
                                                 </td>
                                             ))}
-                                            <td className="p-2 text-center">
-                                                <button onClick={() => deleteRow(row.id)} className="text-red-400 hover:text-red-600"><Trash2 size={18} /></button>
-                                            </td>
+                                            <td className="p-2 text-center"><button onClick={() => deleteRow(row.id)} className="text-slate-300 hover:text-red-500 transition-colors p-2"><Trash2 size={18} /></button></td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                        <button onClick={addRow} className="mt-4 w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50 flex items-center justify-center gap-2">
-                            <Plus size={20} /> নতুন সময় যোগ করুন
-                        </button>
+                        <button onClick={addRow} className="mt-4 w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 font-medium hover:border-primary-400 hover:text-primary-600 hover:bg-primary-50 transition-all flex items-center justify-center gap-2"><Plus size={20} /> নতুন সময় যোগ করুন</button>
                     </div>
                 </div>
             );
         };
 
-        // 2. Reminder (রিমাইন্ডার)
+        // 3. REMINDER & TIMER
         const Reminder = ({ onBack }) => {
             const [alarmTime, setAlarmTime] = React.useState('');
             const [alarms, setAlarms] = React.useState([]);
             const [timeLeft, setTimeLeft] = React.useState(25 * 60);
             const [isActive, setIsActive] = React.useState(false);
+            const [timerMode, setTimerMode] = React.useState(25); // minutes
 
             React.useEffect(() => {
                 let interval = null;
                 if (isActive && timeLeft > 0) interval = setInterval(() => setTimeLeft(t => t - 1), 1000);
-                else if (timeLeft === 0) setIsActive(false);
+                else if (timeLeft === 0 && isActive) { 
+                    setIsActive(false); 
+                    alert('সময় শেষ! বিরতি নিন।'); 
+                }
                 return () => clearInterval(interval);
             }, [isActive, timeLeft]);
 
             const addAlarm = (e) => {
                 e.preventDefault();
-                if (alarmTime) {
-                    setAlarms([...alarms, { time: alarmTime, label: 'Alarm' }]);
-                    setAlarmTime('');
-                }
+                if (alarmTime) { setAlarms([...alarms, { time: alarmTime, label: 'Alarm' }]); setAlarmTime(''); }
             };
 
             const formatTime = (seconds) => {
@@ -263,26 +315,68 @@
             };
 
             return (
-                <div className="space-y-8 animate-fade-in">
-                    <button onClick={onBack} className="flex items-center gap-2 text-primary-600 hover:underline font-medium"><ArrowLeft size={20} /> হোম পেজে ফিরে যান</button>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-100">
-                            <div className="flex items-center gap-3 mb-6"><div className="p-3 bg-rose-100 text-rose-600 rounded-xl"><Bell size={24} /></div><h2 className="text-xl font-bold">অ্যালার্ম সেট করুন</h2></div>
-                            <form onSubmit={addAlarm} className="space-y-4">
-                                <input type="time" required value={alarmTime} onChange={(e) => setAlarmTime(e.target.value)} className="w-full p-3 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-primary-500" />
-                                <button type="submit" className="w-full py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700">অ্যালার্ম যোগ করুন</button>
+                <div className="space-y-6 animate-fade-in pb-20">
+                    <button onClick={onBack} className="flex items-center gap-2 text-primary-600 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors font-semibold"><ArrowLeft size={20} /> ফিরে যান</button>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Alarm Section */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-5"><Bell size={100} /></div>
+                            <div className="flex items-center gap-3 mb-6 relative z-10">
+                                <div className="p-3 bg-rose-100 text-rose-600 rounded-xl shadow-sm"><Bell size={24} /></div>
+                                <h2 className="text-xl font-bold">অ্যালার্ম</h2>
+                            </div>
+                            <form onSubmit={addAlarm} className="space-y-4 relative z-10">
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">সময় নির্বাচন করুন</label>
+                                    <input type="time" required value={alarmTime} onChange={(e) => setAlarmTime(e.target.value)} className="w-full bg-transparent text-2xl font-bold text-slate-700 outline-none" />
+                                </div>
+                                <button type="submit" className="w-full py-3 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-900 transition-colors shadow-lg shadow-slate-200">অ্যালার্ম সেট করুন</button>
                             </form>
-                            <div className="mt-6 space-y-3">
-                                {alarms.map((a, i) => <div key={i} className="flex justify-between p-3 bg-slate-50 rounded-lg border"><span className="font-bold">{a.time}</span></div>)}
+                            <div className="mt-6 space-y-2 relative z-10">
+                                <h3 className="text-sm font-semibold text-slate-400">আপনার অ্যালার্ম সমূহ:</h3>
+                                {alarms.length === 0 && <p className="text-sm text-slate-400 italic">কোনো অ্যালার্ম নেই</p>}
+                                {alarms.map((a, i) => <div key={i} className="flex justify-between items-center p-3 bg-rose-50 border border-rose-100 rounded-lg text-rose-800"><span className="font-bold text-lg">{a.time}</span><CheckCircle size={16}/></div>)}
                             </div>
                         </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-100">
-                            <div className="flex items-center gap-3 mb-6"><div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl"><Clock size={24} /></div><h2 className="text-xl font-bold">পড়ার টাইমার</h2></div>
-                            <div className="text-center py-8">
-                                <div className={`text-6xl font-black mb-8 ${isActive ? 'text-primary-600' : 'text-slate-300'}`}>{formatTime(timeLeft)}</div>
-                                <div className="flex gap-4 justify-center">
-                                    <button onClick={() => setIsActive(!isActive)} className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${isActive ? 'bg-amber-100 text-amber-700' : 'bg-primary-600 text-white'}`}>{isActive ? <><Pause size={20} /> থামান</> : <><Play size={20} /> শুরু করুন</>}</button>
-                                    <button onClick={() => { setIsActive(false); setTimeLeft(25 * 60); }} className="px-4 py-3 bg-slate-100 text-slate-600 rounded-xl"><RotateCcw size={20} /></button>
+
+                        {/* Timer Section */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-5"><Clock size={100} /></div>
+                            <div className="flex items-center gap-3 mb-6 relative z-10">
+                                <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl shadow-sm"><Clock size={24} /></div>
+                                <h2 className="text-xl font-bold">পড়ার টাইমার</h2>
+                            </div>
+                            
+                            <div className="text-center py-4 relative z-10">
+                                <div className="inline-block relative">
+                                    <svg className="w-48 h-48 transform -rotate-90">
+                                        <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100" />
+                                        <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="8" fill="transparent" 
+                                            strokeDasharray={2 * Math.PI * 88} 
+                                            strokeDashoffset={(2 * Math.PI * 88) * (1 - timeLeft / (timerMode * 60))}
+                                            className={`transition-all duration-1000 ${isActive ? 'text-indigo-500' : 'text-slate-300'}`} />
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center flex-col">
+                                        <div className="text-4xl font-black text-slate-700 tabular-nums">{formatTime(timeLeft)}</div>
+                                        <div className="text-xs text-slate-400 font-medium uppercase tracking-wider mt-1">{isActive ? 'চলছে' : 'স্থির'}</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2 justify-center mt-6 mb-6">
+                                    {[25, 45, 60].map(m => (
+                                        <button key={m} onClick={() => { setTimerMode(m); setTimeLeft(m * 60); setIsActive(false); }}
+                                            className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${timerMode === m ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                                            {m} মি
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="flex gap-3 justify-center">
+                                    <button onClick={() => setIsActive(!isActive)} className={`w-32 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg ${isActive ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'}`}>
+                                        {isActive ? <><Pause size={20} /> বিরতি</> : <><Play size={20} /> শুরু</>}
+                                    </button>
+                                    <button onClick={() => { setIsActive(false); setTimeLeft(timerMode * 60); }} className="px-4 py-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition-colors"><RotateCcw size={20} /></button>
                                 </div>
                             </div>
                         </div>
@@ -291,7 +385,7 @@
             );
         };
 
-        // 3. Books (বইসমূহ)
+        // 4. BOOKS LIST
         const Books = ({ onBack }) => {
             const categories = [
                 { id: '1', title: '১ম সেমিস্টার', count: '৬টি বই' },
@@ -303,21 +397,30 @@
                 { id: '7', title: '৭ম সেমিস্টার', count: '৫টি বই' },
             ];
             return (
-                <div className="space-y-6 animate-fade-in">
-                    <button onClick={onBack} className="flex items-center gap-2 text-primary-600 hover:underline font-medium"><ArrowLeft size={20} /> হোম পেজে ফিরে যান</button>
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center mb-8">
-                        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4"><BookOpen size={32} /></div>
-                        <h2 className="text-2xl font-bold text-slate-800">একাডেমিক বই</h2>
-                        <p className="text-slate-500">সেমিস্টার অনুযায়ী বই নির্বাচন করুন</p>
+                <div className="space-y-6 animate-fade-in pb-20">
+                    <button onClick={onBack} className="flex items-center gap-2 text-primary-600 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors font-semibold"><ArrowLeft size={20} /> ফিরে যান</button>
+                    
+                    <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-8 rounded-2xl shadow-lg text-white text-center mb-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-10"><BookOpen size={120} /></div>
+                        <h2 className="text-3xl font-bold mb-2 relative z-10">একাডেমিক বই</h2>
+                        <p className="text-emerald-100 relative z-10">আপনার সেমিস্টার অনুযায়ী প্রয়োজনীয় বইয়ের তালিকা</p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {categories.map((cat) => (
-                            <button key={cat.id} className="group flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 hover:border-primary-400 hover:shadow-md transition-all text-left">
+                            <button key={cat.id} className="group flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-50 transition-all text-left">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center font-bold text-sm">{cat.id}</div>
-                                    <div><h3 className="font-bold text-slate-800 group-hover:text-primary-700">{cat.title}</h3><p className="text-xs text-slate-500">{cat.count}</p></div>
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                        {cat.id}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-800 text-lg group-hover:text-emerald-700">{cat.title}</h3>
+                                        <p className="text-sm text-slate-500 font-medium">{cat.count}</p>
+                                    </div>
                                 </div>
-                                <ChevronRight size={20} className="text-slate-300 group-hover:text-primary-500" />
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all">
+                                    <ChevronRight size={20} />
+                                </div>
                             </button>
                         ))}
                     </div>
@@ -325,26 +428,22 @@
             );
         };
 
-        // 4. AI Chat Component (এআই চ্যাট)
+        // 5. AI CHAT ASSISTANT
         const AIChat = ({ onBack }) => {
-            const [messages, setMessages] = React.useState([
-                { role: 'model', text: 'স্বাগতম! আমি ডিপ্লোমা হেল্পার AI। পড়াশোনা বিষয়ক যেকোনো প্রশ্ন করতে পারেন।' }
-            ]);
+            const [messages, setMessages] = React.useState([{ role: 'model', text: 'নমস্কার! আমি ডিপ্লোমা হেল্পার AI। পড়াশোনা বিষয়ক যেকোনো প্রশ্ন করতে পারেন।' }]);
             const [input, setInput] = React.useState('');
             const [isLoading, setIsLoading] = React.useState(false);
             const messagesEndRef = React.useRef(null);
-            const [localApiKey, setLocalApiKey] = React.useState(window.process.env.API_KEY);
-            const [showKeyInput, setShowKeyInput] = React.useState(!window.process.env.API_KEY);
+            
+            // Get key from persistent storage
+            const [localApiKey, setLocalApiKey] = React.useState(localStorage.getItem('GEMINI_API_KEY') || '');
+            const [showKeyInput, setShowKeyInput] = React.useState(!localStorage.getItem('GEMINI_API_KEY'));
 
-            const scrollToBottom = () => {
-                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-            };
-
-            React.useEffect(() => {
-                scrollToBottom();
-            }, [messages]);
+            const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            React.useEffect(scrollToBottom, [messages]);
 
             const saveKey = (key) => {
+                if(!key.trim()) return;
                 localStorage.setItem('GEMINI_API_KEY', key);
                 window.process.env.API_KEY = key;
                 setLocalApiKey(key);
@@ -353,12 +452,8 @@
 
             const handleSend = async () => {
                 if (!input.trim() || isLoading) return;
+                if (!localApiKey) { setShowKeyInput(true); return; }
                 
-                if (!localApiKey) {
-                    setShowKeyInput(true);
-                    return;
-                }
-
                 const userMessage = input;
                 setInput('');
                 setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
@@ -368,79 +463,61 @@
                     const ai = new GoogleGenAI({ apiKey: localApiKey });
                     const chat = ai.chats.create({
                         model: 'gemini-2.5-flash',
-                        history: messages.map(m => ({
-                            role: m.role,
-                            parts: [{ text: m.text }]
-                        }))
+                        history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
                     });
-                    
                     const result = await chat.sendMessage({ message: userMessage });
-                    const responseText = result.text;
-
-                    setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+                    setMessages(prev => [...prev, { role: 'model', text: result.text }]);
                 } catch (error) {
                     console.error("AI Error:", error);
-                    let errorMsg = 'দুঃখিত, কোনো সমস্যা হয়েছে। ইন্টারনেট কানেকশন বা API Key চেক করুন।';
-                    if (error.message.includes('API_KEY')) {
-                        errorMsg = 'API Key ভুল বা মেয়াদোত্তীর্ণ। দয়া করে সেটিংস থেকে সঠিক কী দিন।';
+                    let errorMsg = 'দুঃখিত, সংযোগে সমস্যা হচ্ছে। আপনার ইন্টারনেট চেক করুন।';
+                    if (error.message && error.message.includes('API key')) { 
+                        errorMsg = 'API Key টি সঠিক নয় বা মেয়াদ শেষ। দয়া করে সেটিংসে গিয়ে নতুন Key দিন।'; 
                         setShowKeyInput(true);
                     }
                     setMessages(prev => [...prev, { role: 'model', text: errorMsg }]);
-                } finally {
-                    setIsLoading(false);
-                }
+                } finally { setIsLoading(false); }
             };
 
-            const handleKeyDown = (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                }
-            }
-
             return (
-                <div className="flex flex-col h-[calc(100vh-140px)] animate-fade-in bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden relative">
-                    {/* Key Input Overlay */}
+                <div className="flex flex-col h-[calc(100vh-100px)] animate-fade-in bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden relative">
+                    {/* API Key Modal Overlay */}
                     {showKeyInput && (
-                        <div className="absolute inset-0 z-20 bg-white/90 backdrop-blur-sm flex items-center justify-center p-6">
-                            <div className="bg-white shadow-2xl p-6 rounded-2xl w-full max-w-sm border border-slate-200">
-                                <div className="flex justify-center mb-4 text-indigo-600"><Bot size={48} /></div>
-                                <h3 className="text-xl font-bold text-center mb-2">API Key প্রয়োজন</h3>
-                                <p className="text-slate-500 text-sm text-center mb-4">চ্যাট করার জন্য আপনার Google Gemini API Key দিন। এটি ব্রাউজারে সেভ থাকবে।</p>
-                                <input type="password" placeholder="API Key পেস্ট করুন..." className="w-full p-3 border rounded-lg mb-4" 
-                                    onChange={(e) => setLocalApiKey(e.target.value)} />
-                                <button onClick={() => saveKey(localApiKey)} disabled={!localApiKey} className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50">
-                                    শুরু করুন
-                                </button>
-                                <button onClick={onBack} className="w-full mt-2 text-slate-500 py-2 text-sm hover:underline">ফিরে যান</button>
+                        <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-md flex items-center justify-center p-6">
+                            <div className="bg-white shadow-2xl p-8 rounded-3xl w-full max-w-sm border border-slate-100 text-center animate-fade-in">
+                                <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4"><Bot size={32} /></div>
+                                <h3 className="text-xl font-bold mb-2 text-slate-800">API Key প্রয়োজন</h3>
+                                <p className="text-slate-500 text-sm mb-6 leading-relaxed">AI এর সাথে কথা বলার জন্য একটি Google Gemini API Key প্রয়োজন। এটি বিনামূল্যে পাওয়া যায়।</p>
+                                <input type="password" placeholder="Paste API Key here..." className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl mb-4 text-center focus:ring-2 focus:ring-indigo-500 outline-none transition-all" onChange={(e) => setLocalApiKey(e.target.value)} />
+                                <button onClick={() => saveKey(localApiKey)} disabled={!localApiKey} className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 disabled:opacity-50">সেভ করুন</button>
+                                <button onClick={onBack} className="mt-4 text-slate-400 text-sm hover:text-slate-600">ফিরে যান</button>
                             </div>
                         </div>
                     )}
 
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 text-white flex justify-between items-center shrink-0">
+                    {/* Chat Header */}
+                    <div className="bg-white border-b border-slate-100 p-4 flex justify-between items-center shrink-0 z-10 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors"><ArrowLeft size={20} /></button>
-                            <div className="flex items-center gap-2">
-                                <div className="bg-white/20 p-1.5 rounded-lg"><Sparkles size={18} /></div>
-                                <h2 className="font-bold">AI চ্যাটবট</h2>
+                            <button onClick={onBack} className="p-2 hover:bg-slate-50 rounded-full text-slate-500"><ArrowLeft size={20} /></button>
+                            <div>
+                                <h2 className="font-bold text-slate-800 flex items-center gap-2">AI অ্যাসিস্ট্যান্ট <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span></h2>
+                                <p className="text-xs text-slate-400">Powered by Google Gemini</p>
                             </div>
                         </div>
-                        <div className="text-xs bg-white/20 px-2 py-1 rounded-full">Gemini 2.5 Flash</div>
+                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center"><Sparkles size={20} /></div>
                     </div>
 
                     {/* Chat Area */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50/50 scroll-smooth">
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`flex items-start max-w-[85%] sm:max-w-[75%] gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${msg.role === 'user' ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                                        {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
+                                <div className={`flex items-end gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600 border border-slate-100'}`}>
+                                        {msg.role === 'user' ? <User size={14} /> : <Bot size={18} />}
                                     </div>
-                                    <div className={`p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                                    <div className={`px-4 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
                                         msg.role === 'user' 
-                                            ? 'bg-indigo-600 text-white rounded-tr-none shadow-md' 
-                                            : 'bg-white text-slate-700 border border-slate-200 rounded-tl-none shadow-sm'
+                                            ? 'bg-indigo-600 text-white rounded-br-none' 
+                                            : 'bg-white text-slate-700 border border-slate-100 rounded-bl-none'
                                     }`}>
                                         {msg.text}
                                     </div>
@@ -448,11 +525,11 @@
                             </div>
                         ))}
                         {isLoading && (
-                            <div className="flex justify-start">
-                                <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-2xl rounded-tl-none border border-slate-200 ml-10">
-                                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-100"></div>
-                                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-200"></div>
+                            <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-2xl rounded-bl-none border border-slate-100 shadow-sm w-fit ml-10">
+                                <div className="flex gap-1">
+                                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+                                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce delay-100"></div>
+                                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce delay-200"></div>
                                 </div>
                             </div>
                         )}
@@ -461,21 +538,18 @@
 
                     {/* Input Area */}
                     <div className="p-4 bg-white border-t border-slate-100 shrink-0">
-                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-all">
-                            <textarea
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder="এখানে আপনার প্রশ্ন লিখুন..."
-                                className="flex-1 bg-transparent border-none focus:ring-0 resize-none text-slate-700 placeholder-slate-400 max-h-32 text-sm p-2"
-                                rows="1"
+                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl px-2 py-2 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                            <input 
+                                value={input} 
+                                onChange={(e) => setInput(e.target.value)} 
+                                onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
+                                placeholder="এখানে আপনার প্রশ্ন লিখুন..." 
+                                className="flex-1 bg-transparent border-none focus:ring-0 p-3 text-sm outline-none text-slate-700 placeholder:text-slate-400" 
                             />
                             <button 
-                                onClick={handleSend}
-                                disabled={isLoading || !input.trim()}
-                                className={`p-2 rounded-lg transition-colors ${
-                                    input.trim() ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                }`}
+                                onClick={handleSend} 
+                                disabled={isLoading || !input.trim()} 
+                                className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-colors shadow-md shadow-indigo-100"
                             >
                                 <Send size={20} />
                             </button>
@@ -485,76 +559,116 @@
             );
         };
 
-        // 5. Layout & Home
+        // 6. LAYOUT & DASHBOARD
         const Layout = ({ children, onViewChange }) => {
             const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
             const [showSettings, setShowSettings] = React.useState(false);
-            const [apiKeyInput, setApiKeyInput] = React.useState(window.process.env.API_KEY);
+            
+            // Profile State - Load from Storage
+            const [userProfile, setUserProfile] = React.useState(() => {
+                const saved = localStorage.getItem('user_profile');
+                return saved ? JSON.parse(saved) : { name: 'স্টুডেন্ট', institute: 'পলিটেকনিক ইনস্টিটিউট', apiKey: '' };
+            });
 
-            const saveApiKey = () => {
-                localStorage.setItem('GEMINI_API_KEY', apiKeyInput);
-                window.process.env.API_KEY = apiKeyInput;
+            // Settings Temp State
+            const [tempProfile, setTempProfile] = React.useState(userProfile);
+
+            React.useEffect(() => {
+                // Sync API key if it exists in profile
+                if (userProfile.apiKey) {
+                    localStorage.setItem('GEMINI_API_KEY', userProfile.apiKey);
+                    window.process.env.API_KEY = userProfile.apiKey;
+                }
+            }, [userProfile]);
+
+            const saveSettings = () => {
+                localStorage.setItem('user_profile', JSON.stringify(tempProfile));
+                if(tempProfile.apiKey) {
+                    localStorage.setItem('GEMINI_API_KEY', tempProfile.apiKey);
+                    window.process.env.API_KEY = tempProfile.apiKey;
+                }
+                setUserProfile(tempProfile);
                 setShowSettings(false);
-                alert("API Key সফলভাবে সেভ হয়েছে!");
             };
 
             return (
-                <div className="min-h-screen flex flex-col relative bg-primary-50">
+                <div className="min-h-screen flex flex-col relative">
                     {/* Header */}
-                    <header className="bg-primary-600 text-white shadow-lg sticky top-0 z-20">
+                    <header className="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200">
                         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-primary-700 rounded-full"><Menu size={24} /></button>
-                                <h1 className="text-xl font-bold tracking-wide cursor-pointer" onClick={() => onViewChange('home')}>Diploma Helper</h1>
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"><Menu size={24} /></button>
+                                <div onClick={() => onViewChange('home')} className="flex items-center gap-2 cursor-pointer group">
+                                    <div className="w-8 h-8 bg-primary-600 text-white rounded-lg flex items-center justify-center shadow-lg shadow-primary-200 group-hover:scale-110 transition-transform"><GraduationCap size={18} /></div>
+                                    <h1 className="text-xl font-bold tracking-tight text-slate-800">Diploma Helper</h1>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-primary-700 rounded-full"><Settings size={20} /></button>
-                                <div className="hidden sm:block p-2 bg-white/10 rounded-full"><User size={20} /></div>
-                            </div>
+                            <button onClick={() => setShowSettings(true)} className="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600 transition-colors"><Settings size={20} /></button>
                         </div>
                     </header>
 
-                    {/* Settings Modal (Quick API Key Entry) */}
+                    {/* Settings Modal */}
                     {showSettings && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                            <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
-                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Settings size={20}/> সেটিংস</h3>
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Google Gemini API Key</label>
-                                    <input type="password" value={apiKeyInput} onChange={(e) => setApiKeyInput(e.target.value)} className="w-full p-2 border rounded-lg text-sm" placeholder="এখানে কী পেস্ট করুন" />
-                                    <p className="text-xs text-slate-500 mt-1">AI চ্যাট ব্যবহারের জন্য এটি প্রয়োজন।</p>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                            <div className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-md border border-slate-100">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold flex items-center gap-2 text-slate-800"><Settings size={20} className="text-primary-600"/> সেটিংস</h3>
+                                    <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400"><X size={20}/></button>
                                 </div>
-                                <div className="flex gap-2 justify-end">
-                                    <button onClick={() => setShowSettings(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">বাতিল</button>
-                                    <button onClick={saveApiKey} className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">সেভ করুন</button>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-600 mb-1.5">আপনার নাম</label>
+                                        <div className="relative">
+                                            <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                                            <input type="text" value={tempProfile.name} onChange={(e) => setTempProfile({...tempProfile, name: e.target.value})} className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-100 outline-none" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-600 mb-1.5">ইনস্টিটিউটের নাম</label>
+                                        <div className="relative">
+                                            <GraduationCap size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                                            <input type="text" value={tempProfile.institute} onChange={(e) => setTempProfile({...tempProfile, institute: e.target.value})} className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-100 outline-none" />
+                                        </div>
+                                    </div>
+                                    <div className="pt-2 border-t border-slate-100">
+                                        <label className="block text-sm font-semibold text-slate-600 mb-1.5">Google API Key (AI-এর জন্য)</label>
+                                        <input type="password" value={tempProfile.apiKey || ''} onChange={(e) => setTempProfile({...tempProfile, apiKey: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none" placeholder="AI Key পেস্ট করুন..." />
+                                        <p className="text-xs text-slate-400 mt-1">এটি আপনার ব্রাউজারেই সেভ থাকবে।</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3 justify-end mt-8">
+                                    <button onClick={() => setShowSettings(false)} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium">বাতিল</button>
+                                    <button onClick={saveSettings} className="px-5 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-medium shadow-lg shadow-primary-200">সেভ করুন</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Sidebar */}
-                    {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />}
-                    <div className={`fixed top-0 left-0 h-full w-72 bg-white shadow-2xl z-40 transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                    {/* Sidebar Drawer */}
+                    {isSidebarOpen && <div className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm transition-opacity" onClick={() => setIsSidebarOpen(false)} />}
+                    <div className={`fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                         <div className="h-full flex flex-col">
-                            <div className="h-40 bg-gradient-to-br from-primary-500 to-primary-700 flex flex-col justify-end p-6 text-white">
-                                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3 backdrop-blur-md"><User size={32} /></div>
-                                <h2 className="font-bold text-lg">স্টুডেন্ট প্রোফাইল</h2>
-                                <p className="text-primary-100 text-sm">ডিপ্লোমা ইঞ্জিনিয়ারিং</p>
+                            <div className="h-48 bg-gradient-to-br from-primary-600 to-indigo-700 flex flex-col justify-end p-6 text-white relative overflow-hidden">
+                                <div className="absolute -top-4 -right-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-xl text-primary-600 font-bold text-2xl border-2 border-white/50">
+                                    {userProfile.name.charAt(0).toUpperCase()}
+                                </div>
+                                <h2 className="font-bold text-xl truncate">{userProfile.name}</h2>
+                                <p className="text-primary-100 text-sm opacity-90 truncate flex items-center gap-1"><GraduationCap size={14}/> {userProfile.institute}</p>
                             </div>
-                            <nav className="flex-1 p-4 space-y-2">
-                                <button onClick={() => {onViewChange('home'); setIsSidebarOpen(false)}} className="w-full flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-primary-50 rounded-lg"><User size={20} /><span>হোম</span></button>
-                                <button onClick={() => setShowSettings(true)} className="w-full flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-primary-50 rounded-lg"><Settings size={20} /><span>সেটিংস</span></button>
-                                <hr className="my-2 border-slate-100" />
-                                <button className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-lg"><LogOut size={20} /><span>লগআউট</span></button>
+                            <nav className="flex-1 p-6 space-y-2">
+                                <button onClick={() => {onViewChange('home'); setIsSidebarOpen(false)}} className="w-full flex items-center gap-4 px-4 py-3.5 text-slate-600 hover:bg-primary-50 hover:text-primary-600 rounded-xl font-medium transition-all"><div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center"><User size={18}/></div> হোম</button>
+                                <button onClick={() => {setShowSettings(true); setIsSidebarOpen(false)}} className="w-full flex items-center gap-4 px-4 py-3.5 text-slate-600 hover:bg-primary-50 hover:text-primary-600 rounded-xl font-medium transition-all"><div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center"><Settings size={18}/></div> সেটিংস</button>
+                                <button onClick={() => {onViewChange('chat'); setIsSidebarOpen(false)}} className="w-full flex items-center gap-4 px-4 py-3.5 text-slate-600 hover:bg-primary-50 hover:text-primary-600 rounded-xl font-medium transition-all"><div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center"><MessageCircle size={18}/></div> AI হেল্প</button>
                             </nav>
+                            <div className="p-6 border-t border-slate-100 text-center">
+                                <p className="text-xs text-slate-400">Diploma Helper v2.0</p>
+                                <p className="text-xs text-slate-300 mt-1">Made with ❤️ by Rifat</p>
+                            </div>
                         </div>
                     </div>
 
-                    <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 pb-24">{children}</main>
-
-                    <footer className="bg-white border-t border-primary-100 text-center py-6 text-slate-500 text-sm font-medium shadow-inner mt-auto">
-                        <p>Developed by Rifat, DPI</p>
-                    </footer>
+                    <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 pb-24 z-0">{children}</main>
                 </div>
             );
         };
@@ -564,46 +678,67 @@
             const [showCalendar, setShowCalendar] = React.useState(false);
 
             const options = [
-                { id: 1, title: 'রুটিন মেকার', icon: <Table size={32} />, color: 'bg-blue-500', desc: 'ক্লাস রুটিন তৈরি করুন', action: () => setView('routine') },
-                { id: 2, title: 'রিমাইন্ডার', icon: <Bell size={32} />, color: 'bg-rose-500', desc: 'অ্যালার্ম ও পড়ার টাইমার', action: () => setView('reminder') },
-                { id: 3, title: 'বইসমূহ', icon: <BookOpen size={32} />, color: 'bg-emerald-500', desc: 'একাডেমিক রিসোর্স', action: () => setView('books') },
-                { id: 4, title: 'নোটিশ বোর্ড', icon: <FileText size={32} />, color: 'bg-purple-500', desc: 'অ্যাডমিনের আপডেট', action: () => setShowNotice(true) },
-                { id: 5, title: 'ক্যালেন্ডার', icon: <CalendarIcon size={32} />, color: 'bg-orange-500', desc: '২০২৬ সালের ক্যালেন্ডার', action: () => setShowCalendar(true) },
-                { id: 6, title: 'AI চ্যাট', icon: <MessageCircle size={32} />, color: 'bg-indigo-500', desc: 'যেকোনো প্রশ্ন করুন', action: () => setView('chat') },
+                { id: 1, title: 'রুটিন মেকার', icon: <Table size={28} />, bg: 'bg-blue-500', text: 'text-blue-600', light: 'bg-blue-50', desc: 'ক্লাস রুটিন তৈরি ও এডিট করুন', action: () => setView('routine') },
+                { id: 2, title: 'রিমাইন্ডার', icon: <Clock size={28} />, bg: 'bg-rose-500', text: 'text-rose-600', light: 'bg-rose-50', desc: 'অ্যালার্ম এবং পড়ার টাইমার', action: () => setView('reminder') },
+                { id: 3, title: 'বইসমূহ', icon: <BookOpen size={28} />, bg: 'bg-emerald-500', text: 'text-emerald-600', light: 'bg-emerald-50', desc: 'সেমিস্টার অনুযায়ী বইয়ের তালিকা', action: () => setView('books') },
+                { id: 4, title: 'নোটিশ বোর্ড', icon: <FileText size={28} />, bg: 'bg-purple-500', text: 'text-purple-600', light: 'bg-purple-50', desc: 'ইনস্টিটিউটের সর্বশেষ নোটিশ', action: () => setShowNotice(true) },
+                { id: 5, title: 'ক্যালেন্ডার', icon: <CalendarIcon size={28} />, bg: 'bg-orange-500', text: 'text-orange-600', light: 'bg-orange-50', desc: '২০২৬ সালের শিক্ষাপঞ্জি', action: () => setShowCalendar(true) },
+                { id: 6, title: 'AI অ্যাসিস্ট্যান্ট', icon: <Sparkles size={28} />, bg: 'bg-indigo-600', text: 'text-indigo-600', light: 'bg-indigo-50', desc: 'পড়াশোনা বিষয়ক লাইভ চ্যাট', action: () => setView('chat') },
             ];
 
             return (
                 <div className="animate-fade-in">
-                    <div className="text-center mb-10 mt-4">
-                        <h2 className="text-3xl font-bold text-slate-800 mb-2">স্বাগতম!</h2>
-                        <p className="text-slate-500">ডিপ্লোমা হেল্পারে আপনাকে স্বাগতম।</p>
+                    <div className="mb-8 mt-2">
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">স্বাগতম! 👋</h2>
+                        <p className="text-slate-500">আপনার আজকের পড়াশোনা কেমন চলছে?</p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         {options.map((opt) => (
-                            <button key={opt.id} onClick={opt.action} className="group relative bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left overflow-hidden">
-                                <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-10 group-hover:opacity-20 transition-opacity ${opt.color}`}></div>
-                                <div className={`w-14 h-14 rounded-xl mb-4 flex items-center justify-center text-white shadow-lg ${opt.color} group-hover:scale-110 transition-transform`}>{opt.icon}</div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-1 group-hover:text-primary-600">{opt.title}</h3>
-                                <p className="text-sm text-slate-500">{opt.desc}</p>
+                            <button key={opt.id} onClick={opt.action} className="group relative bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 text-left overflow-hidden">
+                                {/* Decorative BG */}
+                                <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-5 group-hover:scale-150 transition-transform duration-500 ${opt.bg}`}></div>
+                                
+                                <div className={`w-14 h-14 rounded-2xl mb-4 flex items-center justify-center ${opt.light} ${opt.text} group-hover:scale-110 transition-transform duration-300`}>
+                                    {opt.icon}
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-800 mb-1 group-hover:text-primary-600 transition-colors">{opt.title}</h3>
+                                <p className="text-sm text-slate-400 font-medium group-hover:text-slate-500">{opt.desc}</p>
                             </button>
                         ))}
                     </div>
 
-                    {/* Simple Modals for Notice/Calendar */}
+                    {/* Notice Modal */}
                     {showNotice && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6">
-                                <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold flex items-center gap-2"><FileText /> নোটিশ বোর্ড</h2><button onClick={() => setShowNotice(false)}><X/></button></div>
-                                <div className="h-64 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-xl"><AlertCircle size={48} className="mb-2 opacity-50"/><p>কোনো নতুন নোটিশ নেই</p></div>
+                            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 relative">
+                                <button onClick={() => setShowNotice(false)} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X size={20}/></button>
+                                <div className="text-center py-10">
+                                    <div className="w-20 h-20 bg-purple-50 text-purple-200 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><FileText size={40}/></div>
+                                    <h3 className="text-xl font-bold text-slate-700">নোটিশ বোর্ড</h3>
+                                    <p className="text-slate-400 mt-2">বর্তমানে কোনো নতুন নোটিশ নেই।</p>
+                                </div>
                             </div>
                         </div>
                     )}
                     
+                    {/* Calendar Modal */}
                     {showCalendar && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6">
-                                <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold flex items-center gap-2"><CalendarIcon /> ক্যালেন্ডার ২০২৬</h2><button onClick={() => setShowCalendar(false)}><X/></button></div>
-                                <div className="h-64 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-xl"><p>Calendar View Placeholder</p></div>
+                            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 relative">
+                                <button onClick={() => setShowCalendar(false)} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X size={20}/></button>
+                                <div className="mb-6">
+                                    <h2 className="text-2xl font-bold text-slate-800">জানুয়ারি ২০২৬</h2>
+                                    <p className="text-orange-500 font-medium">নতুন বছর</p>
+                                </div>
+                                <div className="grid grid-cols-7 gap-2 text-center text-sm font-bold text-slate-400 mb-4">
+                                    {['S','M','T','W','T','F','S'].map(d=><div key={d}>{d}</div>)}
+                                </div>
+                                <div className="grid grid-cols-7 gap-2 text-center text-sm">
+                                    {Array.from({length:31},(_,i)=>i+1).map(d=> (
+                                        <div key={d} className={`aspect-square flex items-center justify-center rounded-full ${d===1 ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'hover:bg-slate-100 text-slate-700'}`}>{d}</div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -611,10 +746,15 @@
             );
         };
 
+        // --- ROOT APP ---
         const App = () => {
             const [currentView, setCurrentView] = React.useState('home');
+            const [showIntro, setShowIntro] = React.useState(true);
 
-            // Simple State-based routing for Static File
+            if (showIntro) {
+                return <IntroScreen onEnter={() => setShowIntro(false)} />;
+            }
+
             const renderView = () => {
                 switch(currentView) {
                     case 'routine': return <RoutineMaker onBack={() => setCurrentView('home')} />;
@@ -632,7 +772,6 @@
             );
         };
 
-        // Standard React 18 Mount
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
